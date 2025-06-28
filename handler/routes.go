@@ -10,6 +10,11 @@ import (
 
 func GetHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "hello")
+	conditions := r.URL.Path
+	err := db.Read("gopgx_schema.Users", conditions)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,5 +26,5 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	json.Unmarshal(str_body, &body)
 	fmt.Println(body)
-	db.Insert("GODB", body)
+	db.Insert("gopgx_schema.Users", body)
 }
