@@ -3,13 +3,16 @@ package main
 import (
 	"dbaas/db"
 	"dbaas/handler"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-
 	db.Init_DB()
-	http.HandleFunc("GET /", handler.GetHandler)
-	http.HandleFunc("POST /", handler.PostHandler)
-	http.ListenAndServe(":8080", nil)
+
+	r := gin.Default()
+
+	r.GET("/:table/:cndn", handler.GetHandler)
+	r.POST("/", handler.PostHandler)
+
+	r.Run(":8080")
 }
