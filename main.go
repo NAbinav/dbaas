@@ -11,6 +11,8 @@ func main() {
 
 	r := gin.Default()
 
+	r.GET("/hi", handler.Hi)
+	r.POST("/create/:table_name", handler.Create_Table)
 	r.GET("/:table/:cndn", handler.GetHandler)
 	r.POST("/", handler.PostHandler)
 

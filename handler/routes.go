@@ -2,6 +2,8 @@ package handler
 
 import (
 	"dbaas/db"
+	"fmt"
+
 	// "fmt"
 	"net/http"
 
@@ -37,4 +39,17 @@ func PostHandler(c *gin.Context) {
 
 	db.Insert("gopgx_schema.Users", body)
 	c.JSON(http.StatusCreated, gin.H{"status": "inserted"})
+}
+
+func Create_Table(c *gin.Context) {
+	var table_details map[string]string
+	if err := c.BindJSON(&table_details); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+	fmt.Println(table_details)
+	err := db.Create_Table("gopgx_schema."+c.Param("table_name"), table_details)
+	if err != nil {
+		c.JSON(400, err)
+	}
+	return
 }

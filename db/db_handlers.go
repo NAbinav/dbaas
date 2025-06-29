@@ -73,3 +73,24 @@ func Insert(table string, data map[string]any) error {
 	return err
 
 }
+
+func Create_Table(table_name string, table_details map[string]string) error {
+	fmt.Println(table_name)
+	query := "CREATE TABLE " + table_name + "("
+
+	for column_name, data_type := range table_details {
+		sql_data_type, exists := helpers.SimpleNameToSQL[data_type]
+		if exists == false {
+			return fmt.Errorf("DataTypes not valid")
+		}
+		query += fmt.Sprintf("%s %s,", column_name, sql_data_type)
+		fmt.Println(column_name, sql_data_type, exists)
+
+	}
+	query = query[:len(query)-1]
+	query += ");"
+	fmt.Println(query)
+	_, err := DB.Exec(context.Background(), query)
+	return err
+
+}
