@@ -2,15 +2,22 @@ package db
 
 import (
 	"context"
+	"dbaas/helpers"
 	"fmt"
 	"strings"
 )
 
-func Read(table string, condition string) (any, error) {
-	fmt.Println(strings.Split(table, "/"))
-	conditions_list := strings.Split(condition, "/")
-	query := fmt.Sprintf("SELECT * FROM %s", table)
-	fmt.Println(conditions_list)
+func Read(table string, condition map[string][]string, path string) (any, error) {
+	// fmt.Println(strings.Split(table, "/"))
+	conditions_list := strings.Split(path, "/")
+	fmt.Println(condition)
+	condition_query, err := helpers.QueryRefiner(condition)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(conditions_list, condition)
+	query := fmt.Sprintf("SELECT %s FROM %s %s", conditions_list[2], table, condition_query)
+	fmt.Println(query)
 	// err := DB.QueryRow(context.Background(), query).Scan(&data.userid, &data.name, &data.email)
 	rows, err := DB.Query(context.Background(), query)
 	if err != nil {
@@ -42,9 +49,9 @@ func Read(table string, condition string) (any, error) {
 		return "", err
 	}
 
-	for _, row := range results {
-		fmt.Println(row)
-	}
+	// for _, row := range results {
+	// 	fmt.Println(row)
+	// }
 
 	return results, nil
 }

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"dbaas/db"
-	"fmt"
+	// "fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,12 +10,12 @@ import (
 
 func GetHandler(c *gin.Context) {
 	tableName := c.Param("table")
-	cndn := c.Param("cndn") // Optional: If you plan to use it later
-	queries := c.Request.URL.Query()
-	fmt.Println(queries)
+	// cndn := c.Param("cndn") // Optional: If you plan to use it later
+	path := c.Request.URL.Path
+	// fmt.Println(queries)
 
-	fmt.Println(cndn)
-	result, err := db.Read("gopgx_schema."+tableName, "")
+	queries := c.Request.URL.Query()
+	result, err := db.Read("gopgx_schema."+tableName, queries, path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
