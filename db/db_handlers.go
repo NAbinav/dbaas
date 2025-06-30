@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"dbaas/helpers"
 	"dbaas/model"
 	"fmt"
 	"strings"
@@ -50,4 +51,22 @@ func Delete_table(table_name string) error {
 	query := "DROP TABLE gopgx_schema." + table_name
 	_, err := DB.Exec(context.Background(), query)
 	return err
+}
+
+func DeleteRow(table_name string, condition map[string][]string) error {
+	condition_query, err := helpers.Condition_extract(condition)
+	if err != nil {
+		return err
+	}
+	fmt.Println(condition_query)
+	query := "DELETE FROM " + table_name + " " + condition_query
+	fmt.Println(query)
+	commandTag, err := DB.Exec(context.Background(), query)
+	if commandTag.RowsAffected() != 1 {
+		return fmt.Errorf("No Rows Affected")
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var Table_Prefix = "gopgx_schema."
+
 func GetHandler(c *gin.Context) {
 	tableName := c.Param("table")
 	// cndn := c.Param("cndn") // Optional: If you plan to use it later
@@ -17,7 +19,7 @@ func GetHandler(c *gin.Context) {
 	// fmt.Println(queries)
 
 	queries := c.Request.URL.Query()
-	result, err := db.Read("gopgx_schema."+tableName, queries, path)
+	result, err := db.Read(Table_Prefix+tableName, queries, path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -37,7 +39,7 @@ func PostHandler(c *gin.Context) {
 		return
 	}
 
-	db.Insert("gopgx_schema.Users", body)
+	db.Insert(Table_Prefix+"Users", body)
 	c.JSON(http.StatusCreated, gin.H{"status": "inserted"})
 	return
 }
@@ -48,7 +50,7 @@ func Create_Table(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 	}
 	fmt.Println(table_details)
-	err := db.Create_Table("gopgx_schema."+c.Param("table_name"), table_details)
+	err := db.Create_Table(Table_Prefix+c.Param("table_name"), table_details)
 	if err != nil {
 		c.JSON(400, err)
 		return
@@ -63,4 +65,15 @@ func Delete_table(c *gin.Context) {
 	if err != nil {
 		c.JSON(400, err)
 	}
+}
+
+func DeleteRowHandler(c *gin.Context) {
+	table_name := c.Param("table_name")
+	condition := c.Request.URL.Query()
+	err := db.DeleteRow(Table_Prefix+table_name, condition)
+	if err != nil {
+		c.JSON(400, "Bad Request")
+		return
+	}
+
 }
