@@ -15,6 +15,7 @@ func main() {
 	r.POST("/create/:table_name", handler.Create_Table)
 	r.GET("/:table/:cndn", handler.GetHandler)
 	r.POST("/", handler.PostHandler)
+	r.PUT("/:table_name/:cndn", handler.GetHandler)
 	r.DELETE("/delete/:table_name", handler.Delete_table)
 	r.DELETE("/:table_name", handler.DeleteRowHandler)
 
