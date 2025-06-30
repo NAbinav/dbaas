@@ -2,59 +2,10 @@ package db
 
 import (
 	"context"
-	"dbaas/helpers"
+	"dbaas/model"
 	"fmt"
 	"strings"
 )
-
-func Read(table string, condition map[string][]string, path string) (any, error) {
-	// fmt.Println(strings.Split(table, "/"))
-	conditions_list := strings.Split(path, "/")
-	fmt.Println(condition)
-	condition_query, err := helpers.QueryRefiner(condition)
-	if err != nil {
-		return "", err
-	}
-	fmt.Println(conditions_list, condition)
-	query := fmt.Sprintf("SELECT %s FROM %s %s", conditions_list[2], table, condition_query)
-	fmt.Println(query)
-	// err := DB.QueryRow(context.Background(), query).Scan(&data.userid, &data.name, &data.email)
-	rows, err := DB.Query(context.Background(), query)
-	if err != nil {
-		return "", err
-	}
-
-	defer rows.Close()
-
-	description := rows.FieldDescriptions()
-	data := make([]any, len(description))
-	dataptrs := make([]any, len(description))
-
-	for i := range data {
-		dataptrs[i] = &data[i]
-	}
-
-	var results []map[string]any
-	for rows.Next() {
-		if err := rows.Scan(dataptrs...); err != nil {
-			return "", err
-		}
-		rowData := make(map[string]any)
-		for i, desc := range description {
-			rowData[string(desc.Name)] = data[i]
-		}
-		results = append(results, rowData)
-	}
-	if err := rows.Err(); err != nil {
-		return "", err
-	}
-
-	// for _, row := range results {
-	// 	fmt.Println(row)
-	// }
-
-	return results, nil
-}
 
 func Insert(table string, data map[string]any) error {
 	// Query example:
@@ -79,7 +30,7 @@ func Create_Table(table_name string, table_details map[string]string) error {
 	query := "CREATE TABLE " + table_name + "("
 
 	for column_name, data_type := range table_details {
-		sql_data_type, exists := helpers.SimpleNameToSQL[data_type]
+		sql_data_type, exists := model.SimpleNameToSQL[data_type]
 		if exists == false {
 			return fmt.Errorf("DataTypes not valid")
 		}
@@ -93,4 +44,10 @@ func Create_Table(table_name string, table_details map[string]string) error {
 	_, err := DB.Exec(context.Background(), query)
 	return err
 
+}
+
+func Delete_table(table_name string) error {
+	query := "DROP TABLE gopgx_schema." + table_name
+	_, err := DB.Exec(context.Background(), query)
+	return err
 }

@@ -39,6 +39,7 @@ func PostHandler(c *gin.Context) {
 
 	db.Insert("gopgx_schema.Users", body)
 	c.JSON(http.StatusCreated, gin.H{"status": "inserted"})
+	return
 }
 
 func Create_Table(c *gin.Context) {
@@ -50,6 +51,16 @@ func Create_Table(c *gin.Context) {
 	err := db.Create_Table("gopgx_schema."+c.Param("table_name"), table_details)
 	if err != nil {
 		c.JSON(400, err)
+		return
 	}
 	return
+}
+
+func Delete_table(c *gin.Context) {
+	var table_name string
+	table_name = c.Param("table_name")
+	err := db.Delete_table(table_name)
+	if err != nil {
+		c.JSON(400, err)
+	}
 }

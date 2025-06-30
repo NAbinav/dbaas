@@ -18,7 +18,7 @@ var operatorMap = map[string]string{
 	"nin":  "NOT IN",
 }
 
-func QueryRefiner(query map[string][]string) (string, error) {
+func Condition_extract(query map[string][]string) (string, error) {
 	var conditions []string
 
 	for key, values := range query {

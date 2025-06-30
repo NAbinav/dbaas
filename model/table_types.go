@@ -1,4 +1,4 @@
-package helpers
+package model
 
 var SimpleNameToSQL = map[string]string{
 	"string":             "VARCHAR(255)",
