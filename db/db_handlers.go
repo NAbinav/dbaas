@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"dbaas/auth"
 	"dbaas/helpers"
 	"dbaas/model"
 	"fmt"
@@ -93,4 +94,14 @@ func UpdateRow(table_name string, condition map[string][]string, changes map[str
 		return err
 	}
 	return nil
+}
+
+func InsertAPI(email string) (string, error) {
+	api_key, err := auth.GenerateAPIKey()
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(api_key)
+
+	return api_key, nil
 }

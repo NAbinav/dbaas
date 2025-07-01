@@ -97,8 +97,14 @@ func UpdateTable(c *gin.Context) {
 
 func NewAPIKey(c *gin.Context) {
 	cookies, ok := auth.CheckAndVerifyCookies(c)
-	if ok == true {
-		fmt.Println(cookies)
+	if ok == false {
+		c.JSON(400, "BadAPI")
+		return
 	}
-
+	fmt.Println(cookies)
+	apiKey, err := db.InsertAPI(cookies)
+	c.JSON(200, apiKey)
+	if err != nil {
+		c.JSON(400, "Bad Request")
+	}
 }
