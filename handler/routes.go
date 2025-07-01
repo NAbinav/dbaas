@@ -77,3 +77,19 @@ func DeleteRowHandler(c *gin.Context) {
 	}
 
 }
+
+func UpdateTable(c *gin.Context) {
+	table_name := c.Param("table_name")
+	condition := c.Request.URL.Query()
+	var body map[string]interface{}
+
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+	err := db.UpdateRow(Table_Prefix+table_name, condition, body)
+	if err != nil {
+		c.JSON(400, err)
+	}
+
+}
