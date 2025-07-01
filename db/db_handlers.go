@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func extraxt_value(data map[string]any) ([]string, []string, []any) {
+func extract_value(data map[string]any) ([]string, []string, []any) {
 	var values []any
 	var columns []string
 	var placeholders []string
@@ -23,7 +23,7 @@ func extraxt_value(data map[string]any) ([]string, []string, []any) {
 func Insert(table string, data map[string]any) error {
 	// Query example:
 	// 	(INSERT INTO TABLE (userid,name,age) VALUES ($1 $2 $3)),values
-	columns, placeholders, values := extraxt_value(data)
+	columns, placeholders, values := extract_value(data)
 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", table, strings.Join(columns, " ,"), strings.Join(placeholders, " ,"))
 	fmt.Println(query)
 	_, err := DB.Exec(context.Background(), query, values...)
@@ -77,7 +77,7 @@ func DeleteRow(table_name string, condition map[string][]string) error {
 }
 
 func UpdateRow(table_name string, condition map[string][]string, changes map[string]any) error {
-	column, placeholder, values := extraxt_value(changes)
+	column, placeholder, values := extract_value(changes)
 	query, err := helpers.UpdateQuery(table_name, column, placeholder)
 	if err != nil {
 		return err

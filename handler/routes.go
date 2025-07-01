@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"dbaas/auth"
 	"dbaas/db"
 	"fmt"
 
@@ -90,6 +91,14 @@ func UpdateTable(c *gin.Context) {
 	err := db.UpdateRow(Table_Prefix+table_name, condition, body)
 	if err != nil {
 		c.JSON(400, err)
+	}
+
+}
+
+func NewAPIKey(c *gin.Context) {
+	cookies, ok := auth.CheckAndVerifyCookies(c)
+	if ok == true {
+		fmt.Println(cookies)
 	}
 
 }
