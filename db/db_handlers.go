@@ -6,9 +6,9 @@ import (
 	"dbaas/helpers"
 	"dbaas/model"
 	"fmt"
-	"strings"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"strings"
 )
 
 func extract_value(data map[string]any) ([]string, []string, []any) {
@@ -174,4 +174,16 @@ func CheckTableWithAPI(apikey, table_name string) (bool, error) {
 	query := `SELECT EXISTS (SELECT 1 FROM api_keys.keytable WHERE $1 = ANY ((SELECT tablenames FROM api_keys.keytable WHERE apikey = $2)));`
 	err := DB.QueryRow(context.Background(), query, table_name, apikey).Scan(&exists)
 	return exists, err
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		apiKey := c.GetHeader("X-API-Key")
+		if apiKey == "" || !IsValidAPIKey(apiKey) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or missing API key"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
 }
