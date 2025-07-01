@@ -7,6 +7,8 @@ import (
 	"dbaas/model"
 	"fmt"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func extract_value(data map[string]any) ([]string, []string, []any) {
@@ -145,4 +147,31 @@ func InsertEmailApi(api string, email string) error {
 	query := "INSERT INTO api_keys.keytable  (apikey, email_id, tablenames) values ($1,$2,ARRAY[]::TEXT[]);"
 	_, err := DB.Exec(context.Background(), query, api, email)
 	return err
+}
+
+func IsValidAPIKey(key string) bool {
+	query := `SELECT 1 FROM api_keys.keytable WHERE apikey = $1 LIMIT 1;`
+
+	row := DB.QueryRow(context.Background(), query, key)
+	var exists int
+	err := row.Scan(&exists)
+	return err == nil
+}
+
+func ValidateAPIHeader(key string) bool {
+
+	query := `SELECT 1 FROM api_keys.keytable WHERE apikey = $1 LIMIT 1;`
+
+	row := DB.QueryRow(context.Background(), query, key)
+	var exists int
+	err := row.Scan(&exists)
+	return err == nil
+
+}
+
+func CheckTableWithAPI(apikey, table_name string) (bool, error) {
+	var exists bool
+	query := `SELECT EXISTS (SELECT 1 FROM api_keys.keytable WHERE $1 = ANY ((SELECT tablenames FROM api_keys.keytable WHERE apikey = $2)));`
+	err := DB.QueryRow(context.Background(), query, table_name, apikey).Scan(&exists)
+	return exists, err
 }
