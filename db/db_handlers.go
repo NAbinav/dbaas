@@ -97,11 +97,52 @@ func UpdateRow(table_name string, condition map[string][]string, changes map[str
 }
 
 func InsertAPI(email string) (string, error) {
-	api_key, err := auth.GenerateAPIKey()
+	apiKey, err := auth.GenerateAPIKey()
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(api_key)
 
-	return api_key, nil
+	existingKey, found, err := APIExists(email)
+	if err != nil {
+		return "", err
+	}
+	if found {
+		return existingKey, nil
+	}
+
+	err = InsertEmailApi(apiKey, email)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println(apiKey)
+	return apiKey, nil
+}
+
+func APIExists(email string) (string, bool, error) {
+	query := `SELECT apikey FROM api_keys.keytable WHERE email_id = $1;`
+	data, err := DB.Query(context.Background(), query, email)
+	if err != nil {
+		fmt.Println("Error querying DB:", err)
+		return "", false, err
+	}
+
+	fmt.Println(data.FieldDescriptions())
+
+	results, err := ReadFromQuery(data)
+	if err != nil {
+		return "", false, err
+	}
+
+	if len(results) > 0 {
+		return (results[0]["apikey"]).(string), true, nil
+	}
+
+	return "", false, nil
+}
+
+func InsertEmailApi(api string, email string) error {
+	query := "INSERT INTO api_keys.keytable  (apikey, email_id, tablenames) values ($1,$2,ARRAY[]::TEXT[]);"
+	_, err := DB.Exec(context.Background(), query, api, email)
+	return err
 }
