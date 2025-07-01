@@ -4,7 +4,6 @@ import (
 	"dbaas/auth"
 	"dbaas/db"
 	"fmt"
-
 	// "fmt"
 	"net/http"
 
@@ -14,7 +13,7 @@ import (
 var Table_Prefix = "gopgx_schema."
 
 func GetHandler(c *gin.Context) {
-	tableName := c.Param("table")
+	tableName := c.Param("table_name")
 	// cndn := c.Param("cndn") // Optional: If you plan to use it later
 	path := c.Request.URL.Path
 	// fmt.Println(queries)
@@ -39,8 +38,8 @@ func PostHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
-
-	db.Insert(Table_Prefix+"Users", body)
+	table := c.Param("table_name")
+	db.Insert(Table_Prefix+table, body)
 	c.JSON(http.StatusCreated, gin.H{"status": "inserted"})
 	return
 }
@@ -56,9 +55,7 @@ func Create_Table(c *gin.Context) {
 		c.JSON(400, err)
 		return
 	}
-	return
 }
-
 func Delete_table(c *gin.Context) {
 	var table_name string
 	table_name = c.Param("table_name")
