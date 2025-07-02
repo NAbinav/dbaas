@@ -27,8 +27,30 @@ func GetHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+var Welcome = `API Documentation
+
+Welcome to the API documentation for the DBaaS (Database as a Service) application. This service allows you to interact with a database using HTTP requests. You can perform CRUD (Create, Read, Update, Delete) operations on any table in your database.
+
+    GET /: Displays a simple welcome message.
+
+
+    GET /newApiKey: Generates a new API key for authenticated users.
+
+    POST /create/:table_name: Creates a new table in the database with the specified name.
+
+    GET /:table_name/:column: Fetches data from a specific column in the specified table.
+
+    POST /:table_name: Inserts a new row of data into the specified table.
+
+    PUT /:table_name: Updates data in the specified table.
+
+    DELETE /delete/:table_name: Deletes the entire table from the database.
+
+    DELETE /:table_name: Deletes a row from the specified table.`
+
 func Hi(c *gin.Context) {
-	c.String(http.StatusOK, "hi")
+	c.String(http.StatusOK, Welcome)
 }
 
 func PostHandler(c *gin.Context) {
