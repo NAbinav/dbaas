@@ -13,11 +13,6 @@ A RESTful API service that provides simplified database operations for developer
 
 ## Authentication
 
-### Google OAuth2 Login
-Access the login endpoint to authenticate with your Google account:
-```
-GET /login
-```
 
 ### API Key Generation
 After authentication, generate your API key:
@@ -26,17 +21,8 @@ GET /newApiKey
 ```
 
 ### Using API Keys
-Include your API key in requests to access protected endpoints. All database operations require valid API key authentication.
+Include your API key in requests as a header as X-API-KEY to access protected endpoints. All database operations require valid API key authentication.
 
-## API Endpoints
-
-### Authentication Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/login` | Initiate Google OAuth2 login |
-| `GET` | `/callback` | OAuth2 callback handler |
-| `GET` | `/newApiKey` | Generate new API key |
 
 ### Table Management
 
@@ -220,15 +206,6 @@ No installation required - simply start using the API endpoints directly.
 - All database operations require valid API key authentication
 - Google OAuth2 provides secure user authentication
 - Middleware enforces authentication on protected endpoints
-
-## Error Handling
-
-The service returns appropriate HTTP status codes:
-- `200`: Success
-- `400`: Bad Request (invalid parameters)
-- `401`: Unauthorized (invalid or missing API key)
-- `404`: Not Found (table or resource doesn't exist)
-- `500`: Internal Server Error
 
 ## Support
 
