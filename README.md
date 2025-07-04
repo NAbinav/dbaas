@@ -30,45 +30,29 @@ Include your API key in requests to access protected endpoints. All database ope
 
 ## API Endpoints
 
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/login` | Initiate Google OAuth2 login |
+| `GET` | `/callback` | OAuth2 callback handler |
+| `GET` | `/newApiKey` | Generate new API key |
+
 ### Table Management
 
-#### Create Table
-```http
-POST /create/{table_name}
-```
-Creates a new database table with the specified name.
-
-#### Delete Table
-```http
-DELETE /delete/{table_name}
-```
-Removes the specified table from the database.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/create/{table_name}` | Create new table |
+| `DELETE` | `/delete/{table_name}` | Delete table |
 
 ### Data Operations
 
-#### Insert Data
-```http
-POST /{table_name}
-```
-Adds new records to the specified table.
-
-#### Retrieve Data
-```http
-GET /{table_name}/{column}
-```
-Retrieves data from the specified table and column with optional filtering.
-
-#### Update Data
-```http
-PUT /{table_name}
-```
-Updates existing records in the specified table. Supports filtering to update specific records.
-
-#### Delete Records
-```http
-DELETE /{table_name}
-```
-Removes records from the specified table. Supports filtering to delete specific records.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/{table_name}/{column}` | Retrieve data with optional filtering |
+| `POST` | `/{table_name}` | Insert new records |
+| `PUT` | `/{table_name}` | Update records with filtering |
+| `DELETE` | `/{table_name}` | Delete records with filtering |
 
 ## Query Parameters
 
@@ -76,12 +60,14 @@ The service supports advanced filtering through URL query parameters using compa
 
 ### Supported Operators
 
-- `_gt`: Greater than
-- `_gte`: Greater than or equal to
-- `_lt`: Less than
-- `_lte`: Less than or equal to
-- `_eq`: Equal to (default if no operator specified)
-- `_ne`: Not equal to
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `_gt` | Greater than | `age_gt=25` |
+| `_gte` | Greater than or equal to | `price_gte=100` |
+| `_lt` | Less than | `date_lt=2024-01-01` |
+| `_lte` | Less than or equal to | `weight_lte=75` |
+| `_eq` | Equal to (default if no operator specified) | `status_eq=active` |
+| `_ne` | Not equal to | `category_ne=deprecated` |
 
 ### Examples
 
@@ -115,46 +101,117 @@ DELETE /orders?status_eq=cancelled&date_lt=2024-01-01
 ```
 Deletes orders where status equals "cancelled" and date is before 2024-01-01.
 
+## Table Schema Definition
+
+When creating a table, you must provide the table schema in the request body as JSON. The schema defines the column names and their data types.
+
+### Request Body Format
+```json
+{
+  "id": "int",
+  "name": "string",
+  "email": "string",
+  "age": "int",
+  "created_at": "datetime",
+  "is_active": "boolean"
+}
+```
+
+### Supported Data Types
+
+| Type | Description | SQL Mapping |
+|------|-------------|-------------|
+| `string` | Variable-length text | `VARCHAR(255)` |
+| `text` | Long text content | `TEXT` |
+| `int` | Integer numbers | `INT` |
+| `big int` | Large integer numbers | `BIGINT` |
+| `decimal` | Decimal numbers | `DECIMAL(10,2)` |
+| `float` | Floating point numbers | `FLOAT` |
+| `boolean` | True/false values | `BOOLEAN` |
+| `date` | Date values | `DATE` |
+| `time` | Time values | `TIME` |
+| `datetime` | Date and time | `DATETIME` |
+| `timestamp` | Timestamp values | `TIMESTAMP` |
+| `json` | JSON data | `JSON` |
+| `uuid` | UUID values | `CHAR(36)` |
+| `auto-increment int` | Auto-incrementing ID | `SERIAL` |
+
+### Example: Creating a Users Table
+```bash
+curl -X POST "https://dboss.brogramiz.info/create/users" \
+     -H "Authorization: Bearer your_api_key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "id": "auto-increment int",
+       "name": "string",
+       "email": "string",
+       "age": "int",
+       "created_at": "datetime",
+       "is_active": "boolean"
+     }'
+```
+
+## Data Insertion
+
+When inserting data into a table, provide the record data as JSON in the request body.
+
+### Request Body Format
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "age": 30,
+  "created_at": "2024-01-15 10:30:00",
+  "is_active": true
+}
+```
+
+### Example: Inserting a User
+```bash
+curl -X POST "https://dboss.brogramiz.info/users" \
+     -H "Authorization: Bearer your_api_key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "name": "John Doe",
+       "email": "john@example.com",
+       "age": 30,
+       "created_at": "2024-01-15 10:30:00",
+       "is_active": true
+     }'
+```
+
+### Inserting Multiple Records
+```bash
+curl -X POST "https://dboss.brogramiz.info/users" \
+     -H "Authorization: Bearer your_api_key" \
+     -H "Content-Type: application/json" \
+     -d '[
+       {
+         "name": "John Doe",
+         "email": "john@example.com",
+         "age": 30,
+         "is_active": true
+       },
+       {
+         "name": "Jane Smith",
+         "email": "jane@example.com",
+         "age": 25,
+         "is_active": true
+       }
+     ]'
+```
+
 ## Getting Started
 
-### Prerequisites
-- Go 1.18 or higher
-- Database connection (configuration required)
-- Google OAuth2 credentials
+The service is live and ready to use at: **https://dboss.brogramiz.info**
 
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
-
-3. Configure your database connection in the `db` package
-4. Set up Google OAuth2 credentials in the `auth` package
-5. Run the service:
-   ```bash
-   go run main.go
-   ```
-
-The service will start on port 8081.
-
-### Configuration
-
-Before running the service, ensure you have:
-
-1. **Database Configuration**: Configure your database connection parameters
-2. **Google OAuth2 Setup**: 
-   - Create a Google Cloud Console project
-   - Enable Google+ API
-   - Create OAuth2 credentials
-   - Configure authorized redirect URIs to include your callback URL
+No installation required - simply start using the API endpoints directly.
 
 ## Usage Flow
 
-1. **Authentication**: Visit `/login` to authenticate with Google
-2. **API Key**: Generate your API key at `/newApiKey`
-3. **Table Creation**: Create tables using `POST /create/{table_name}`
+1. **Authentication**: Visit `https://dboss.brogramiz.info/login` to authenticate with Google
+2. **API Key**: Generate your API key at `https://dboss.brogramiz.info/newApiKey`
+3. **Table Creation**: Create tables using `POST https://dboss.brogramiz.info/create/{table_name}`
 4. **Data Operations**: Perform CRUD operations using your API key
 5. **Query Data**: Use query parameters for filtered data retrieval
 
