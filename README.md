@@ -7,12 +7,11 @@ A RESTful API service that provides simplified database operations for developer
 - **Simple Database Operations**: Create, read, update, and delete operations through REST endpoints
 - **Query Parameter Filtering**: Filter data using URL parameters with comparison operators
 - **Google OAuth2 Authentication**: Secure authentication through Google accounts
-- **API Key Management**: Generate and manage API keys for service access
+- **API Key Management**: Generate API keys for service access
 - **Table Management**: Create and manage database tables dynamically
 - **Developer-Friendly**: Simplified interface for rapid application development
 
 ## Authentication
-
 
 ### API Key Generation
 After authentication, generate your API key:
@@ -21,8 +20,22 @@ GET /newApiKey
 ```
 
 ### Using API Keys
-Include your API key in requests as a header as X-API-KEY to access protected endpoints. All database operations require valid API key authentication.
+Include your API key in the `X-API-KEY` header for all requests to access protected endpoints. All database operations require valid API key authentication.
 
+```bash
+curl -H "X-API-KEY: your_api_key" \
+     https://dboss.brogramiz.info/users/name
+```
+
+## API Endpoints
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/login` | Initiate Google OAuth2 login |
+| `GET` | `/callback` | OAuth2 callback handler |
+| `GET` | `/newApiKey` | Generate new API key |
 
 ### Table Management
 
@@ -125,7 +138,7 @@ When creating a table, you must provide the table schema in the request body as 
 ### Example: Creating a Users Table
 ```bash
 curl -X POST "https://dboss.brogramiz.info/create/users" \
-     -H "Authorization: Bearer your_api_key" \
+     -H "X-API-KEY: your_api_key" \
      -H "Content-Type: application/json" \
      -d '{
        "id": "auto-increment int",
@@ -155,7 +168,7 @@ When inserting data into a table, provide the record data as JSON in the request
 ### Example: Inserting a User
 ```bash
 curl -X POST "https://dboss.brogramiz.info/users" \
-     -H "Authorization: Bearer your_api_key" \
+     -H "X-API-KEY: your_api_key" \
      -H "Content-Type: application/json" \
      -d '{
        "name": "John Doe",
@@ -169,7 +182,7 @@ curl -X POST "https://dboss.brogramiz.info/users" \
 ### Inserting Multiple Records
 ```bash
 curl -X POST "https://dboss.brogramiz.info/users" \
-     -H "Authorization: Bearer your_api_key" \
+     -H "X-API-KEY: your_api_key" \
      -H "Content-Type: application/json" \
      -d '[
        {
@@ -195,11 +208,10 @@ No installation required - simply start using the API endpoints directly.
 
 ## Usage Flow
 
-1. **Authentication**: Visit `https://dboss.brogramiz.info/login` to authenticate with Google
-2. **API Key**: Generate your API key at `https://dboss.brogramiz.info/newApiKey`
-3. **Table Creation**: Create tables using `POST https://dboss.brogramiz.info/create/{table_name}`
-4. **Data Operations**: Perform CRUD operations using your API key
-5. **Query Data**: Use query parameters for filtered data retrieval
+1. **API Key**: Generate your API key at `https://dboss.brogramiz.info/newApiKey`
+2. **Table Creation**: Create tables using `POST https://dboss.brogramiz.info/create/{table_name}`
+3. **Data Operations**: Perform CRUD operations using your API key
+4. **Query Data**: Use query parameters for filtered data retrieval
 
 ## Security
 
