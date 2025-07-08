@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var Table_Prefix = "gopgx_schema."
+var TablePrefix = "gopgx_schema."
 
 func GetHandler(c *gin.Context) {
 	tableName := c.Param("table_name")
@@ -18,8 +18,10 @@ func GetHandler(c *gin.Context) {
 	path := c.Request.URL.Path
 	// fmt.Println(queries)
 
+	// apiKey := c.GetHeader("X-API-Key")
+	// schema_name := db.FormatAPIKEY(apiKey)
 	queries := c.Request.URL.Query()
-	result, err := db.Read(Table_Prefix+tableName, queries, path)
+	result, err := db.Read(TablePrefix+tableName, queries, path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -60,8 +62,15 @@ func PostHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
+	apiKey := c.GetHeader("X-API-Key")
+	fmt.Println(apiKey)
+	schema_name, err := db.FormatAPIKEY(apiKey)
+	if err != nil {
+		c.JSON(400, err)
+	}
+
 	table := c.Param("table_name")
-	db.Insert(Table_Prefix+table, body)
+	db.Insert(schema_name+"."+table, body)
 	c.JSON(http.StatusCreated, gin.H{"status": "inserted"})
 	return
 }
@@ -71,8 +80,11 @@ func Create_Table(c *gin.Context) {
 	if err := c.BindJSON(&table_details); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 	}
+	apiKey := c.GetHeader("X-API-Key")
+	schema_name, err := db.FormatAPIKEY(apiKey)
+	fmt.Println(schema_name)
 	fmt.Println(table_details)
-	err := db.Create_Table(Table_Prefix+c.Param("table_name"), table_details)
+	err = db.Create_Table(schema_name+"."+c.Param("table_name"), table_details)
 	if err != nil {
 		c.JSON(400, err)
 		return
@@ -81,7 +93,12 @@ func Create_Table(c *gin.Context) {
 func Delete_table(c *gin.Context) {
 	var table_name string
 	table_name = c.Param("table_name")
-	err := db.Delete_table(table_name)
+	apiKey := c.GetHeader("X-API-Key")
+	schema_name, err := db.FormatAPIKEY(apiKey)
+	if err != nil {
+		c.JSON(400, err)
+	}
+	err = db.Delete_table(schema_name + "." + table_name)
 	if err != nil {
 		c.JSON(400, err)
 	}
@@ -90,7 +107,12 @@ func Delete_table(c *gin.Context) {
 func DeleteRowHandler(c *gin.Context) {
 	table_name := c.Param("table_name")
 	condition := c.Request.URL.Query()
-	err := db.DeleteRow(Table_Prefix+table_name, condition)
+	apiKey := c.GetHeader("X-API-Key")
+	schema_name, err := db.FormatAPIKEY(apiKey)
+	if err != nil {
+		c.JSON(400, err)
+	}
+	err = db.DeleteRow(schema_name+table_name, condition)
 	if err != nil {
 		c.JSON(400, "Bad Request")
 		return
@@ -101,13 +123,18 @@ func DeleteRowHandler(c *gin.Context) {
 func UpdateTable(c *gin.Context) {
 	table_name := c.Param("table_name")
 	condition := c.Request.URL.Query()
+	apiKey := c.GetHeader("X-API-Key")
+	schema_name, err := db.FormatAPIKEY(apiKey)
+	if err != nil {
+		c.JSON(400, err)
+	}
 	var body map[string]interface{}
 
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
-	err := db.UpdateRow(Table_Prefix+table_name, condition, body)
+	err = db.UpdateRow(schema_name+table_name, condition, body)
 	if err != nil {
 		c.JSON(400, err)
 	}
@@ -122,8 +149,13 @@ func NewAPIKey(c *gin.Context) {
 	}
 	fmt.Println(cookies)
 	apiKey, err := db.InsertAPI(cookies)
+	// err = db.UserSchemaCreation(apiKey)
+	fmt.Println(apiKey)
+	fmt.Println(err)
 	if err != nil {
 		c.JSON(400, fmt.Errorf("Bad Request"))
+		c.Abort()
+
 	}
 	c.String(200, apiKey)
 

@@ -6,10 +6,10 @@ import (
 	"dbaas/helpers"
 	"dbaas/model"
 	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"regexp"
+	"strings"
 )
 
 func extract_value(data map[string]any) ([]string, []string, []any) {
@@ -101,10 +101,10 @@ func UpdateRow(table_name string, condition map[string][]string, changes map[str
 
 func InsertAPI(email string) (string, error) {
 	apiKey, err := auth.GenerateAPIKey()
+	fmt.Println(apiKey)
 	if err != nil {
 		return "", err
 	}
-
 	existingKey, found, err := APIExists(email)
 	if err != nil {
 		return "", err
@@ -146,13 +146,44 @@ func APIExists(email string) (string, bool, error) {
 
 func InsertEmailApi(api string, email string) error {
 	query := "INSERT INTO api_keys.keytable  (apikey, email_id, tablenames) values ($1,$2,ARRAY[]::TEXT[]);"
-	_, err := DB.Exec(context.Background(), query, api, email)
+	err := UserSchemaCreation(api)
+	if err != nil {
+		return err
+	}
+	_, err = DB.Exec(context.Background(), query, api, email)
 	return err
 }
 
+func FormatAPIKEY(api string) (string, error) {
+	// Regex: allow letters, numbers, underscore, dash; length 20+
+	re := regexp.MustCompile(`^[a-zA-Z0-9_\-]{20,}$`)
+	if !re.MatchString(api) {
+		return "", fmt.Errorf("invalid API key format")
+	}
+
+	// Replace dashes with underscores (optional normalization)
+	schema := "user_" + strings.ReplaceAll(api, "-", "_")
+
+	// Wrap in double quotes to safely use as schema name in SQL
+	return fmt.Sprintf(`"%s"`, schema), nil
+}
+
+func UserSchemaCreation(api string) error {
+	schemaName, err := FormatAPIKEY(api)
+	if err != nil {
+		return err
+	}
+	query := "CREATE SCHEMA IF NOT EXISTS " + (schemaName)
+	fmt.Println("Running query:", query)
+
+	_, err = DB.Exec(context.Background(), query)
+	if err != nil {
+		fmt.Println("Error creating schema:", err)
+	}
+	return err
+}
 func IsValidAPIKey(key string) bool {
 	query := `SELECT 1 FROM api_keys.keytable WHERE apikey = $1 LIMIT 1;`
-
 	row := DB.QueryRow(context.Background(), query, key)
 	var exists int
 	err := row.Scan(&exists)
@@ -179,7 +210,7 @@ func CheckTableWithAPI(apikey, table_name string) (bool, error) {
 }
 
 func TableNameToAPIKEY(table string, api string) error {
-	query := `UPDATE api_keys.keytable SET tablenames = array_append(tablenames, $1) WHERE apikey = $2;`
+	query := `UPDATE api_keys.keytable SET tablenames = array_append(tablenames, $1) WHERE apikey = $2 AND NOT ($1 = ANY(tablenames));`
 	_, err := DB.Exec(context.Background(), query, table, api)
 	return err
 }
@@ -187,6 +218,11 @@ func TableNameToAPIKEY(table string, api string) error {
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader("X-API-Key")
+		// email, err := GetEmailWithAPI(apiKey)
+		// if err != nil {
+		// 	c.JSON(416, "Nahh")
+		// }
+		// fmt.Println(email)
 		table := c.Param("table_name")
 		if apiKey == "" || !IsValidAPIKey(apiKey) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or missing API key"})
@@ -196,7 +232,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if c.Request.Method == "POST" && strings.HasPrefix(c.FullPath(), "/create/:table_name") {
 			c.Next()
-
+			fmt.Println("Hello")
 			err := TableNameToAPIKEY(table, apiKey)
 			if err != nil {
 				fmt.Printf("Failed to update permissions: %v\n", err)
@@ -213,4 +249,25 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+func GetEmailWithAPI(api string) (string, error) {
+	query := `SELECT email_id FROM api_keys.keytable WHERE apikey = $1;`
+	data, err := DB.Query(context.Background(), query, api)
+	if err != nil {
+		fmt.Println("Error querying DB:", err)
+		return "", err
+	}
+
+	results, err := ReadFromQuery(data)
+	if err != nil {
+		return "", err
+	}
+
+	if len(results) > 0 {
+		return (results[0]["email_id"]).(string), nil
+	}
+
+	return "", fmt.Errorf("Not avail")
+
 }

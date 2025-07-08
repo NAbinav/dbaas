@@ -24,7 +24,7 @@ func Init_auth() {
 	config := &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		RedirectURL:  "https://dboss.brogramiz.info/callback",
+		RedirectURL:  os.Getenv("CALLBACK_URL"),
 		Scopes:       []string{"email", "profile"},
 		Endpoint:     google.Endpoint,
 	}
