@@ -155,17 +155,11 @@ func InsertEmailApi(api string, email string) error {
 }
 
 func FormatAPIKEY(api string) (string, error) {
-	// Regex: allow letters, numbers, underscore, dash; length 20+
-	re := regexp.MustCompile(`^[a-zA-Z0-9_\-]{20,}$`)
-	if !re.MatchString(api) {
-		return "", fmt.Errorf("invalid API key format")
+	if api == "" {
+		return "", fmt.Errorf("API key cannot be empty")
 	}
-
-	// Replace dashes with underscores (optional normalization)
-	schema := "user_" + strings.ReplaceAll(api, "-", "_")
-
-	// Wrap in double quotes to safely use as schema name in SQL
-	return fmt.Sprintf(`"%s"`, schema), nil
+	hashed := helpers.HashPasswordSHA256(api)
+	return hashed, nil
 }
 
 func UserSchemaCreation(api string) error {
