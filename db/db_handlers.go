@@ -57,7 +57,7 @@ func Create_Table(table_name string, table_details map[string]string) error {
 }
 
 func Delete_table(table_name string) error {
-	query := "DROP TABLE gopgx_schema." + table_name
+	query := "DROP TABLE " + table_name
 	_, err := DB.Exec(context.Background(), query)
 	return err
 }

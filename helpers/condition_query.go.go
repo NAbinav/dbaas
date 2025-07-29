@@ -1,3 +1,4 @@
+// helpers/condition_extract.go
 package helpers
 
 import (
@@ -22,35 +23,77 @@ func Condition_extract(query map[string][]string) (string, error) {
 	var conditions []string
 
 	for key, values := range query {
-		parts := strings.SplitN(key, "_", 2)
-		if len(parts) != 2 {
-			return "", fmt.Errorf("invalid filter key: %s", key)
-		}
+		if key == "or" {
+			// Handle OR conditions
+			orConditions := strings.Split(values[0], ",")
+			var orParts []string
 
-		column := parts[0]
-		opKey := parts[1]
-		op, ok := operatorMap[opKey]
-		if !ok {
-			return "", fmt.Errorf("unsupported operator: %s", opKey)
-		}
+			for _, orCond := range orConditions {
+				parts := strings.Split(orCond, ":")
+				if len(parts) != 2 {
+					return "", fmt.Errorf("invalid OR condition format: %s - use format: field_operator:value", orCond)
+				}
 
-		raw := values[0]
+				fieldOp := parts[0]
+				value := parts[1]
 
-		if op == "IN" || op == "NOT IN" {
-			items := strings.Split(raw, ",")
-			var quotedItems []string
-			for _, item := range items {
-				quotedItems = append(quotedItems, fmt.Sprintf("'%s'", strings.TrimSpace(item)))
+				fieldParts := strings.SplitN(fieldOp, "_", 2)
+				if len(fieldParts) != 2 {
+					return "", fmt.Errorf("invalid OR field format: %s - use format: field_operator", fieldOp)
+				}
+
+				column := fieldParts[0]
+				opKey := fieldParts[1]
+				op, ok := operatorMap[opKey]
+				if !ok {
+					return "", fmt.Errorf("unsupported operator in OR: %s", opKey)
+				}
+
+				if op == "IN" || op == "NOT IN" {
+					items := strings.Split(value, "|")
+					var quotedItems []string
+					for _, item := range items {
+						quotedItems = append(quotedItems, fmt.Sprintf("'%s'", strings.TrimSpace(item)))
+					}
+					orParts = append(orParts, fmt.Sprintf("%s %s (%s)", column, op, strings.Join(quotedItems, ", ")))
+				} else {
+					orParts = append(orParts, fmt.Sprintf("%s %s '%s'", column, op, value))
+				}
 			}
-			conditions = append(conditions, fmt.Sprintf("%s %s (%s)", column, op, strings.Join(quotedItems, ", ")))
+
+			if len(orParts) > 0 {
+				conditions = append(conditions, fmt.Sprintf("(%s)", strings.Join(orParts, " OR ")))
+			}
 		} else {
-			conditions = append(conditions, fmt.Sprintf("%s %s '%s'", column, op, raw))
+			// Handle regular AND conditions
+			parts := strings.SplitN(key, "_", 2)
+			if len(parts) != 2 {
+				return "", fmt.Errorf("invalid filter key: %s - use format: field_operator", key)
+			}
+
+			column := parts[0]
+			opKey := parts[1]
+			op, ok := operatorMap[opKey]
+			if !ok {
+				return "", fmt.Errorf("unsupported operator: %s", opKey)
+			}
+
+			raw := values[0]
+			if op == "IN" || op == "NOT IN" {
+				items := strings.Split(raw, ",")
+				var quotedItems []string
+				for _, item := range items {
+					quotedItems = append(quotedItems, fmt.Sprintf("'%s'", strings.TrimSpace(item)))
+				}
+				conditions = append(conditions, fmt.Sprintf("%s %s (%s)", column, op, strings.Join(quotedItems, ", ")))
+			} else {
+				conditions = append(conditions, fmt.Sprintf("%s %s '%s'", column, op, raw))
+			}
 		}
 	}
 
 	if len(conditions) == 0 {
 		return "", nil
 	}
-
 	return "WHERE " + strings.Join(conditions, " AND "), nil
 }

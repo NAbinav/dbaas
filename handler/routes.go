@@ -12,18 +12,17 @@ import (
 
 func GetHandler(c *gin.Context) {
 	tableName := c.Param("table_name")
-	// cndn := c.Param("cndn") // Optional: If you plan to use it later
 	path := c.Request.URL.Path
-	// fmt.Println(queries)
 
-	// apiKey := c.GetHeader("X-API-Key")
-	// schema_name := db.FormatAPIKEY(apiKey)
 	apiKey := c.GetHeader("X-API-Key")
 	fmt.Println(apiKey)
+
 	schema_name, err := db.FormatAPIKEY(apiKey)
 	if err != nil {
-		c.JSON(401, err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
+		return
 	}
+
 	queries := c.Request.URL.Query()
 	result, err := db.Read(schema_name+"."+tableName, queries, path)
 	if err != nil {

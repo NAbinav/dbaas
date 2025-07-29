@@ -34,32 +34,29 @@ func ReadFromQuery(rows pgx.Rows) ([]map[string]any, error) {
 	}
 	return results, nil
 }
-
 func Read(table string, condition map[string][]string, path string) (any, error) {
-	// fmt.Println(strings.Split(table, "/"))
 	conditions_list := strings.Split(path, "/")
 	fmt.Println(condition)
+
 	condition_query, err := helpers.Condition_extract(condition)
 	if err != nil {
 		return "", err
 	}
+
 	fmt.Println(conditions_list, condition)
 	query := fmt.Sprintf("SELECT %s FROM %s %s", conditions_list[2], table, condition_query)
 	fmt.Println(query)
-	// err := DB.QueryRow(context.Background(), query).Scan(&data.userid, &data.name, &data.email)
+
 	rows, err := DB.Query(context.Background(), query)
 	if err != nil {
 		return "", err
 	}
-
 	defer rows.Close()
+
 	results, err := ReadFromQuery(rows)
 	if err != nil {
 		return "", err
 	}
-	// for _, row := range results {
-	// 	fmt.Println(row)
-	// }
 
 	return results, nil
 }
