@@ -5,10 +5,10 @@ import (
 	"dbaas/auth"
 	"dbaas/helpers"
 	"dbaas/model"
+	"dbaas/ratelimiter"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
@@ -209,9 +209,45 @@ func TableNameToAPIKEY(table string, api string) error {
 	return err
 }
 
+func RateLimitMiddleware() gin.HandlerFunc {
+	rl := rateLimiter.NewTokenBucket() // your limiter manager
+
+	return func(c *gin.Context) {
+		APIKey := c.GetHeader("X-API-Key")
+
+		// 1️⃣ Check API key
+		if APIKey == "" || !IsValidAPIKey(APIKey) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or missing API key"})
+			c.Abort()
+			return
+		}
+
+		// 2️⃣ Get rate limit for this API key
+		limit, err := rl.GetRateLimit(APIKey)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get rate limit"})
+			c.Abort()
+			return
+		}
+
+		// 3️⃣ Check if allowed
+		if !rl.Allow(APIKey, limit) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Rate limit exceeded"})
+			c.Abort()
+			return
+		}
+
+		// 4️⃣ Continue to next handler
+		c.Next()
+	}
+}
+
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		Rl := ratelimiter.NewTokenBucket()
+
 		apiKey := c.GetHeader("X-API-Key")
+
 		// email, err := GetEmailWithAPI(apiKey)
 		// if err != nil {
 		// 	c.JSON(416, "Nahh")
