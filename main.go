@@ -4,12 +4,10 @@ import (
 	"dbaas/auth"
 	"dbaas/db"
 	"dbaas/handler"
-	"dbaas/rateLimiter"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	Rl := rateLimiter.NewTokenBucket()
 	db.Init_DB()
 	auth.Init_auth()
 
